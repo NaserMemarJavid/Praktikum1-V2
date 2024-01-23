@@ -64,11 +64,6 @@ class MainActivity : ComponentActivity() {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         getLocation()
 
-        val sensorEventListener = object : SensorEventListener {
-            override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
-            override fun onSensorChanged(event: SensorEvent) {}
-        }
-
         setContent {
             MySensorsTheme {
                 // A surface container using the 'background' color from the theme
@@ -78,7 +73,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Column {
                         Gps(lat, lon)
-                        AccelerometerAndGyroscope()
+                        Accelerometer()
+                        Gyroscope()
                     }
 
                 }
@@ -178,58 +174,45 @@ fun Gps(lat:String, lon:String) {
 } // End of GPS Composable
 
 @Composable
-fun AccelerometerAndGyroscope() {
+fun Accelerometer() {
 
     val ctx = LocalContext.current
     val sensorManager: SensorManager = ctx.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+    var checkAcc = false
+
     var accX = remember { mutableStateOf(-1f) }
     var accY = remember { mutableStateOf(-1f) }
     var accZ = remember { mutableStateOf(-1f) }
 
-    var gyrX = remember { mutableStateOf(0f) }
-    var gyrY = remember { mutableStateOf(0f) }
-    var gyrZ = remember { mutableStateOf(0f) }
 
     val sensorEventListener = object : SensorEventListener {
-        override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
-        }
+        override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
         override fun onSensorChanged(event: SensorEvent) {
             if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
                 accX.value = event.values[0]
                 accY.value = event.values[1]
                 accZ.value = event.values[2]
             }
-            else if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
-                gyrX.value = event.values[0]
-                gyrY.value = event.values[1]
-                gyrZ.value = event.values[2]
-            }
         }
     }
-    sensorManager.registerListener(sensorEventListener,sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),SensorManager.SENSOR_DELAY_NORMAL)
+    sensorManager.registerListener(sensorEventListener,sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),10000000)
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(15.dp)
-            .height(150.dp)
+        modifier = Modifier.fillMaxWidth().padding(15.dp).height(150.dp)
         //.background(color = Color.Gray)
     ){
         Column() {
             Row (
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement =  Arrangement.SpaceBetween,
-                verticalAlignment     = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement =  Arrangement.SpaceBetween, verticalAlignment     = Alignment.CenterVertically
             ){
-                Text(text = "GPS", color = Color.Black )
+                Text(text = "Accelerometer", color = Color.Black )
             }
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement =  Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement =  Arrangement.SpaceBetween,
             ) {
                 Column() {
                     Text("accX: ${accX.value}\naccY: ${accY.value}\naccZ: ${accZ.value}")
-                    Text("X: ${gyrX.value}\nY: ${gyrY.value}\nZ: ${gyrZ.value}")
                 }
                 Column {
                     Button(onClick = { }, content = { Text(text = "Save")})
@@ -250,12 +233,70 @@ fun AccelerometerAndGyroscope() {
 
 }// End of ACC&GYR Composable
 
+@Composable
+fun Gyroscope(){
+
+    val ctx = LocalContext.current
+    val sensorManager: SensorManager = ctx.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+    var checkGyr = false
+
+    var gyrX = remember { mutableStateOf(0f) }
+    var gyrY = remember { mutableStateOf(0f) }
+    var gyrZ = remember { mutableStateOf(0f) }
+
+    val sensorEventListener = object : SensorEventListener {
+        override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
+        override fun onSensorChanged(event: SensorEvent) {
+            if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
+                gyrX.value = event.values[0]
+                gyrY.value = event.values[1]
+                gyrZ.value = event.values[2]
+            }
+        }
+    }
+    sensorManager.registerListener(sensorEventListener,sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),10000000)
+    sensorManager.registerListener(sensorEventListener,sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),10000000)
+
+    Box(
+        modifier = Modifier.fillMaxWidth().padding(15.dp).height(150.dp)
+        //.background(color = Color.Gray)
+    ){
+        Column() {
+            Row (
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement =  Arrangement.SpaceBetween, verticalAlignment     = Alignment.CenterVertically
+            ){
+                Text(text = "GPS", color = Color.Black )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement =  Arrangement.SpaceBetween,
+            ) {
+                Column() {
+                    Text("X: ${gyrX.value}\nY: ${gyrY.value}\nZ: ${gyrZ.value}")
+                }
+                Column {
+                    Button(onClick = { }, content = { Text(text = "Save")})
+                    Button(onClick = { }, content = { Text(text = "show")})
+                }
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Phase:")
+                Slider(value =20f, onValueChange = {} )
+                Text(text = "0")
+            }
+        }
+    }
+
+}
+
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     MySensorsTheme {
         Gps(lat = "55", lon = "66")
-        AccelerometerAndGyroscope()
+        Accelerometer()
     }
 }
