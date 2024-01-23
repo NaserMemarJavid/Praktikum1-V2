@@ -54,7 +54,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private lateinit var locationCallback : LocationCallback
 
-    private lateinit var sensorManager: PackageManager
 
     private var lat  by mutableStateOf("")
     private var lon by  mutableStateOf("")
@@ -183,31 +182,31 @@ fun AccelerometerAndGyroscope() {
 
     val ctx = LocalContext.current
     val sensorManager: SensorManager = ctx.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    var accX = remember { mutableStateOf(-1f) }
+    var accY = remember { mutableStateOf(-1f) }
+    var accZ = remember { mutableStateOf(-1f) }
 
-    var accX = remember { mutableStateOf(0F) }
-    var accY = remember { mutableStateOf(0F) }
-    var accZ = remember { mutableStateOf(0F) }
-    /*
-        var gyrX = remember { mutableStateOf(0F) }
-        var gyrY = remember { mutableStateOf(0F) }
-        var gyrZ = remember { mutableStateOf(0F) }*/
+    var gyrX = remember { mutableStateOf(0f) }
+    var gyrY = remember { mutableStateOf(0f) }
+    var gyrZ = remember { mutableStateOf(0f) }
 
     val sensorEventListener = object : SensorEventListener {
         override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
         }
-
         override fun onSensorChanged(event: SensorEvent) {
             if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
                 accX.value = event.values[0]
                 accY.value = event.values[1]
                 accZ.value = event.values[2]
-            } else if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
-                // gyrX.value = event.values[0]
-                // gyrY.value = event.values[1]
-                // gyrZ.value = event.values[2]
+            }
+            else if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
+                gyrX.value = event.values[0]
+                gyrY.value = event.values[1]
+                gyrZ.value = event.values[2]
             }
         }
     }
+    sensorManager.registerListener(sensorEventListener,sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),SensorManager.SENSOR_DELAY_NORMAL)
 
     Box(
         modifier = Modifier
@@ -229,24 +228,8 @@ fun AccelerometerAndGyroscope() {
                 horizontalArrangement =  Arrangement.SpaceBetween,
             ) {
                 Column() {
-                    Row {
-                        Text(text = "accX:   ",
-                            modifier = Modifier.width(40.dp))
-                        Text(text = "lat",
-                            modifier = Modifier.width(100.dp))
-                    }
-                    Row {
-                        Text(text = "accY:   ",
-                            modifier = Modifier.width(40.dp))
-                        Text(text = "lon",
-                            modifier = Modifier.width(100.dp))
-                    }
-                    Row {
-                        Text(text = "accZ:   ",
-                            modifier = Modifier.width(40.dp))
-                        Text(text = "lon",
-                            modifier = Modifier.width(100.dp))
-                    }
+                    Text("accX: ${accX.value}\naccY: ${accY.value}\naccZ: ${accZ.value}")
+                    Text("X: ${gyrX.value}\nY: ${gyrY.value}\nZ: ${gyrZ.value}")
                 }
                 Column {
                     Button(onClick = { }, content = { Text(text = "Save")})
@@ -262,9 +245,6 @@ fun AccelerometerAndGyroscope() {
             }
         }
     }
-
-
-
 
 
 
