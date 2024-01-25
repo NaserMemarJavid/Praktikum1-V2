@@ -42,9 +42,13 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.lern1.mysensors.ui.theme.MySensorsTheme
+import java.io.BufferedReader
 import java.io.File
+import java.io.FileReader
 import java.io.FileWriter
 import java.io.IOException
 
@@ -67,8 +71,6 @@ class MainActivity : ComponentActivity() {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         getLocation()
 
-
-
         setContent {
             MySensorsTheme {
                 // A surface container using the 'background' color from the theme
@@ -86,6 +88,58 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onStart() {
+        super.onStart()
+        startLocationUpdates()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        stopLocationUpdates()
+    }
+
+    private fun createLocationRequest() {
+       // locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY,10000).build()
+    }
+
+    private fun createLocationCallback() {
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(p0: LocationResult) {
+                p0?.lastLocation?.let { location ->
+                    lat = location.latitude.toString()
+                    lon = location.longitude.toString()
+                    println("Latitude: $lat, Longitude: $lon")
+                }
+            }
+        }
+    }
+
+    private fun startLocationUpdates() {
+        if (ContextCompat.checkSelfPermission(
+                applicationContext,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            && ContextCompat.checkSelfPermission(
+                applicationContext,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {/*
+            fusedLocationProviderClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                null
+            )*/
+        } else {
+            requestPermissions(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), 0)
+        }
+    }
+    private fun stopLocationUpdates() {
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+    }
+
+
+
 
     private fun getLocation() {
 
@@ -138,6 +192,28 @@ private fun saveDataToFile(context: Context, fileName: String, dataList: List<St
         // Handle the exception
         Toast.makeText(context, "Error saving data", Toast.LENGTH_SHORT).show()
     }
+}
+private fun readDataFromFile(context: Context, fileName: String): List<String> {
+    val dataList = mutableListOf<String>()
+    try {
+        val file = File(context.filesDir, fileName)
+        val fileReader = FileReader(file)
+        val bufferedReader = BufferedReader(fileReader)
+
+        var line: String?
+
+        while (bufferedReader.readLine().also { line = it } != null) {
+            dataList.add(line!!)
+        }
+
+        bufferedReader.close()
+        fileReader.close()
+    } catch (e: IOException) {
+        e.printStackTrace()
+        // Handle the exception
+        Toast.makeText(context, "Error reading data", Toast.LENGTH_SHORT).show()
+    }
+    return dataList
 }
 
 private fun showDataDialog(context: Context, dataList: List<String>) {
